@@ -1,24 +1,57 @@
 <html>
 <head>
     <script language="JavaScript">
-        //let connection = new RTCPeerConnection();
-        //connection.createOffer().then((offer)=>
-        //    fetch("http://localhost:8080/offer",
-        //        {
-        //            method: "POST" ,
-        //            mode: "same-origin",
-        //            body: JSON.stringify(offer),
-        //        }
-        //    ));
-        const websocket = new WebSocket("ws://localhost:8080/signal");
-        websocket.addEventListener("open", (event) => {
-            websocket.send(JSON.stringify({
+        const signalChannel = new WebSocket("ws://localhost:8080/signal");
+
+        const config = {
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        }
+        const connection = new RTCPeerConnection(config);
+
+        connection.addEventListener("icecandidate", async (event) => {
+            console.log("sending ice cadidate");
+            await signalChannel.send(JSON.stringify({
+                type: "ice_candidate",
+                sdp: JSON.stringify(event.candidate)
+            }));
+        });
+
+        const channel = connection.createDataChannel("chat");
+        channel.addEventListener("open", (event) => {
+            console.log("opened the channel");
+            channel.send("hey there!");
+        });
+
+        signalChannel.addEventListener("open", async (event) => {
+            signalChannel.send(JSON.stringify({
                 type: "initiator"
             }));
         });
-        websocket.addEventListener("message", (event) => {
+
+        signalChannel.addEventListener("message", async (event) => {
             console.log(" >> " + event.data);
+            let data = JSON.parse(event.data);
+            if (data.type === "start_sync") {
+                await sendOffer();
+            }
+
+            if (data.type === "answer") {
+                await receiveAnswer(data);
+            }
         });
+
+        async function sendOffer() {
+            const offer = await connection.createOffer();
+            await connection.setLocalDescription(offer);
+            await signalChannel.send(JSON.stringify(offer));
+            console.log("offer sent");
+        }
+
+        async function receiveAnswer(answer) {
+            await connection.setRemoteDescription(answer);
+            console.log("answer set");
+            console.log("connection statis is " + connection.connectionState);
+        }
     </script>
 </head>
     <body>

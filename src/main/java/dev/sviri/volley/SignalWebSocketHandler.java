@@ -43,7 +43,9 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
                 followerSession = session;
                 beginRTCNegotiationIfNeeded();
             }
-            default -> log.atWarn().log("Don't know what to do with message of {} type", signal.type());
+            case OFFER -> followerSession.sendMessage(message);
+            case ANSWER -> initiatorSession.sendMessage(message);
+            case ICE_CANDIDATE -> followerSession.sendMessage(message);
         }
     }
 

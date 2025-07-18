@@ -9,7 +9,7 @@ enum SignalMessageType {
     START_SYNC("start_sync"),
     OFFER("offer"),
     ANSWER("answer"),
-    ICE_CANDIDATE("ICE candidate");
+    ICE_CANDIDATE("ice_candidate");
 
     @JsonCreator
     SignalMessageType(String name) {
