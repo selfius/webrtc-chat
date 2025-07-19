@@ -1,0 +1,61 @@
+package dev.sviri.volley;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.io.IOException;
+import java.util.UUID;
+
+@Controller
+public class LandingController {
+    private static final String UID_COOKIE = "uid";
+    private static final Log log = LogFactory.getLog(LandingController.class);
+
+    private UserService userService;
+    private RoomService roomService;
+
+    public LandingController(UserService userService, RoomService roomService) {
+        this.userService = userService;
+        this.roomService = roomService;
+    }
+
+    @GetMapping("/")
+    public void redirectToRoom(@CookieValue(value = UID_COOKIE, required = false) String uid, HttpServletResponse httpServletResponse) throws IOException {
+        User initiator = getUserAndDropCookie(uid, httpServletResponse);
+        Room room = roomService.createRoom(initiator);
+        httpServletResponse.sendRedirect("/room/" + room.uuid());
+    }
+
+
+    @GetMapping("/room/{room_uid}")
+    public String room(@PathVariable("room_uid") String roomUid, @CookieValue(value = UID_COOKIE, required = false) String uid, HttpServletResponse response) {
+        getUserAndDropCookie(uid, response);
+        return "/static/chat.html";
+    }
+
+    private User getUserAndDropCookie(String uid, HttpServletResponse httpServletResponse) {
+        User initiator = null;
+        if (uid != null) {
+            UUID userId = null;
+            try {
+                userId = UUID.fromString(uid);
+            } catch (Exception e) {
+                log.warn(String.format("'%s' is not a valid UUID", uid));
+            }
+            initiator = userService.findUser(userId);
+        }
+        if (initiator == null) {
+            initiator = userService.createUser();
+        }
+        Cookie userIdCookie = new Cookie(UID_COOKIE, initiator.uid().toString());
+        userIdCookie.setPath("/");
+        httpServletResponse.addCookie(userIdCookie);
+        return initiator;
+    }
+}

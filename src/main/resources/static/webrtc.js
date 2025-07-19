@@ -1,31 +1,46 @@
-<html>
-<head>
-    <script language="JavaScript">
         const signalChannel = new WebSocket("ws://localhost:8080/signal");
+
 
         const config = {
             iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
         }
         const connection = new RTCPeerConnection(config);
 
-        connection.addEventListener("icecandidate", (event) =>
-            console.log("ICE: >> " + event));
+        connection.addEventListener("icecandidate", async (event) => {
+            console.log("sending ice cadidate");
+            await signalChannel.send(JSON.stringify({
+                type: "ice_candidate",
+                sdp: JSON.stringify(event.candidate)
+            }));
+        });
 
         connection.addEventListener("datachannel", (event) => {
             const channel = event.channel;
             channel.addEventListener("message", (event) => console.log(event));
         });
 
-
         signalChannel.addEventListener("open", async (event) => {
+            const uidCookie = await cookieStore.get("uid");
+            const uid = uidCookie.value;
+            const roomId = document.URL.match("room/([\\w-]*)$")[1];
+
             signalChannel.send(JSON.stringify({
-                type: "follower"
+                type: "initiate",
+                sdp: `${uid},${roomId}`
             }));
         });
 
         signalChannel.addEventListener("message", async (event) => {
             console.log(" >> " + event.data);
             let data = JSON.parse(event.data);
+            if (data.type === "start_sync") {
+                await sendOffer();
+            }
+
+            if (data.type === "answer") {
+                await receiveAnswer(data);
+            }
+
             if (data.type === "offer") {
                 await createAnswer(data);
             }
@@ -33,6 +48,27 @@
                 await setIceCandidate(JSON.parse(data.sdp));
             }
         });
+
+        async function sendOffer() {
+            // temporarily here, to be executed only on the initiator side
+            const channel = connection.createDataChannel("chat");
+            channel.addEventListener("open", (event) => {
+                console.log("opened the channel");
+                channel.send("hey there!");
+            });
+
+            const offer = await connection.createOffer();
+            await connection.setLocalDescription(offer);
+            await signalChannel.send(JSON.stringify(offer));
+            console.log("offer sent");
+        }
+
+        async function receiveAnswer(answer) {
+            await connection.setRemoteDescription(answer);
+            console.log("answer set");
+            console.log("connection statis is " + connection.connectionState);
+
+        }
 
         async function createAnswer(offer) {
             console.log("setting offer " + JSON.stringify(offer));
@@ -48,10 +84,3 @@
         async function setIceCandidate(candidate) {
             await connection.addIceCandidate(candidate);
         }
-    </script>
-</head>
-<body>
-<textarea readonly="readonly"></textarea>
-<input type="text"></input>
-</body>
-</html>

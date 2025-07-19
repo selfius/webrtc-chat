@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 enum SignalMessageType {
-    INITIATOR("initiator"),
-    FOLLOWER("follower"),
+    INITIATE("initiate"),
     START_SYNC("start_sync"),
     OFFER("offer"),
     ANSWER("answer"),
