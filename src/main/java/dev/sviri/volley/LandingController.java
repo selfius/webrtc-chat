@@ -17,8 +17,8 @@ public class LandingController {
     private static final String UID_COOKIE = "uid";
     private static final Log log = LogFactory.getLog(LandingController.class);
 
-    private UserService userService;
-    private RoomService roomService;
+    private final UserService userService;
+    private final RoomService roomService;
 
     public LandingController(UserService userService, RoomService roomService) {
         this.userService = userService;
@@ -35,6 +35,16 @@ public class LandingController {
 
     @GetMapping("/room/{room_uid}")
     public String room(@PathVariable("room_uid") String roomUid, @CookieValue(value = UID_COOKIE, required = false) String uid, HttpServletResponse response) {
+        UUID parsedRoomUid = null;
+        try {
+            parsedRoomUid = UUID.fromString(roomUid);
+        } catch (Exception e) {
+            log.warn(String.format("'%s' is not a valid room UUID", parsedRoomUid));
+        }
+        Room room = roomService.findRoom(parsedRoomUid);
+        if (room == null) {
+            return "/static/error.html";
+        }
         getUserAndDropCookie(uid, response);
         return "/static/chat.html";
     }
@@ -46,7 +56,7 @@ public class LandingController {
             try {
                 userId = UUID.fromString(uid);
             } catch (Exception e) {
-                log.warn(String.format("'%s' is not a valid UUID", uid));
+                log.warn(String.format("'%s' is not a valid user UUID", uid));
             }
             initiator = userService.findUser(userId);
         }
