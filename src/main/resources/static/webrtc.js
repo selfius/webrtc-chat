@@ -1,6 +1,5 @@
         const signalChannel = new WebSocket("ws://localhost:8080/signal");
 
-
         const config = {
             iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
         }
@@ -15,8 +14,7 @@
         });
 
         connection.addEventListener("datachannel", (event) => {
-            const channel = event.channel;
-            channel.addEventListener("message", (event) => console.log(event));
+            wireInputsToChannel(event.channel);
         });
 
         signalChannel.addEventListener("open", async (event) => {
@@ -49,12 +47,35 @@
             }
         });
 
+        function wireInputsToChannel(channel) {
+                const messageInput = document.getElementById("message_input");
+                const chatBox = document.getElementById("chatbox");
+
+                messageInput.addEventListener("keydown",
+                    (event) => {
+                        if (event.key == "Enter") {
+                            try{
+                                channel.send(messageInput.value);
+                                chatBox.value += ">> " + messageInput.value + "\n";
+                                messageInput.value = "";
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        }
+                    });
+
+            channel.addEventListener("message", (event) => { 
+                console.log(event);
+                chatBox.value += "<< " + event.data + "\n"; 
+            });
+        }
+
         async function sendOffer() {
             // temporarily here, to be executed only on the initiator side
             const channel = connection.createDataChannel("chat");
             channel.addEventListener("open", (event) => {
                 console.log("opened the channel");
-                channel.send("hey there!");
+                wireInputsToChannel(channel);
             });
 
             const offer = await connection.createOffer();
@@ -67,7 +88,6 @@
             await connection.setRemoteDescription(answer);
             console.log("answer set");
             console.log("connection statis is " + connection.connectionState);
-
         }
 
         async function createAnswer(offer) {
@@ -84,3 +104,4 @@
         async function setIceCandidate(candidate) {
             await connection.addIceCandidate(candidate);
         }
+
