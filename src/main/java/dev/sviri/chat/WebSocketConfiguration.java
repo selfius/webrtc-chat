@@ -1,4 +1,4 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

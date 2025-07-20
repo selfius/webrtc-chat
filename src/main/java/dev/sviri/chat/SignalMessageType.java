@@ -1,4 +1,4 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

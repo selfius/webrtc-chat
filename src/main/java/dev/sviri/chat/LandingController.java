@@ -1,4 +1,4 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;

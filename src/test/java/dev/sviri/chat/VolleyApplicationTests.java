@@ -1,4 +1,4 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

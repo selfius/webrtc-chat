@@ -1,8 +1,8 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 import java.util.UUID;
 
-class User {
+public class User {
     private final UUID uid;
 
     User() {

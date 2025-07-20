@@ -1,4 +1,4 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;

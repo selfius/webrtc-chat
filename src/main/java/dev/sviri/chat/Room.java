@@ -1,8 +1,8 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 import java.util.UUID;
 
-class Room {
+public class Room {
     private final User initiator;
     private final UUID uuid;
 

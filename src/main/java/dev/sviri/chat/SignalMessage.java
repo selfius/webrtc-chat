@@ -1,4 +1,4 @@
-package dev.sviri.volley;
+package dev.sviri.chat;
 
 record SignalMessage(
         SignalMessageType type,
