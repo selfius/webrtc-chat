@@ -21,7 +21,7 @@ function initRTCConnection() {
 }
 
 
-const signalChannel = new WebSocket("ws://localhost:8080/signal");
+const signalChannel = new WebSocket(`ws://${document.location.host}/signal`);
 signalChannel.addEventListener("open", async (event) => {
     const uidCookie = await cookieStore.get("uid");
     const uid = uidCookie.value;
