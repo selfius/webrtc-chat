@@ -83,6 +83,8 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
             case ICE_CANDIDATE -> {
                 if (session.equals(getInitiator(session))) {
                     getFollower(session).sendMessage(message);
+                } else {
+                    getInitiator(session).sendMessage(message);
                 }
             }
         }
