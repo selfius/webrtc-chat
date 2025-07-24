@@ -1,10 +1,40 @@
 <html>
     <head>
-        <script language="JavaScript" src="/static/webrtc.js">
+        <script language="JavaScript" src="/static/webrtc.js" type="module">
         </script>
+        <style>
+            body {
+                color: lightgrey
+            }
+
+            div.message {
+                margin: 8px;
+                padding: 4px;
+                border-radius: 4px;
+            }
+
+            div.incoming-message {
+                background: green;
+            }
+
+            div.outgoing-message {
+                background: darkgreen;
+            }
+        </style>
     </head>
     <body>
-        <textarea id="chatbox" readonly="readonly"></textarea>
-        <input id="message_input" type="text"></input>
+        <div style="background: grey; display: inline-block">
+            <div id="message-log" style="width: 400px; height: 300px; overflow: scroll">
+            </div>
+            <input id="message_input" type="text" style="width: 100%"></input>
+        </div>
+        <div style="display:none">
+            <div id="incoming-message-template" class="message incoming-message">
+                %message%
+            </div>
+            <div id="outgoing-message-template" class="message outgoing-message">
+                %message%
+            </div>
+        </div>
     </body>
 </html>

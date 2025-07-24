@@ -18,6 +18,7 @@ public class VolleyApplication {
         @Override
         public void addResourceHandlers(ResourceHandlerRegistry registry) {
             registry.addResourceHandler("/static/**")
+                    .addResourceLocations("file:src/main/resources/static/")
                     .addResourceLocations("classpath:/static/");
         }
     }

@@ -1,3 +1,5 @@
+import {add_incoming_message, add_outgoing_message} from './messages.js';
+
 const config = {
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 }
@@ -54,14 +56,13 @@ signalChannel.addEventListener("message", async (event) => {
 
 function wireInputsToChannel(channel) {
     const messageInput = document.getElementById("message_input");
-    const chatBox = document.getElementById("chatbox");
 
     messageInput.onkeydown = 
         (event) => {
-            if (event.key == "Enter") {
+            if (event.key == "Enter" && messageInput.value.trim()) {
                 try{
                     channel.send(messageInput.value);
-                    chatBox.value += ">> " + messageInput.value + "\n";
+                    add_outgoing_message(messageInput.value);
                     messageInput.value = "";
                 } catch (err) {
                     console.log(err);
@@ -71,7 +72,7 @@ function wireInputsToChannel(channel) {
 
     channel.addEventListener("message", (event) => { 
         console.log(event);
-        chatBox.value += "<< " + event.data + "\n"; 
+        add_incoming_message(event.data);
     });
 }
 
