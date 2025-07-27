@@ -1,13 +1,25 @@
 import {add_incoming_message, add_outgoing_message} from './messages.js';
 
-const config = {
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-}
-
 let connection = undefined;
 
-function initRTCConnection() {
-    let connection = new RTCPeerConnection(config);
+function initRTCConnection(credentials) {
+    let connection = undefined;
+    if (credentials) {
+        const username = credentials.split(":")[0];
+        const password = credentials.split(":")[1];
+        const config = {
+            iceServers : [
+                {urls : "turn:turn.sviri.dev:3478",
+                    username : username,
+                    credential: password
+                }
+            ]
+        }
+        connection = new RTCPeerConnection(config);
+        console.log(" initializing rtc with " + credentials);
+    } else {
+        connection = new RTCPeerConnection();
+    }
     connection.addEventListener("icecandidate", async (event) => {
         console.log("sending ice cadidate");
         await signalChannel.send(JSON.stringify({
@@ -38,20 +50,23 @@ signalChannel.addEventListener("open", async (event) => {
 signalChannel.addEventListener("message", async (event) => {
     console.log(" >> " + event.data);
     let data = JSON.parse(event.data);
-    if (data.type === "start_sync") {
-        await sendOffer();
-    }
-
-    if (data.type === "answer") {
-        await receiveAnswer(data);
-    }
-
-    if (data.type === "offer") {
-        await createAnswer(data);
-    }
-    if (data.type === "ice_candidate") {
-        await setIceCandidate(JSON.parse(data.sdp));
-    }
+    switch(data.type) {
+        case "start_sync" : 
+            await sendOffer(data);
+            break;
+        case "stun_credentials" :
+            connection = initRTCConnection(data.sdp);
+            break;
+        case "answer": 
+            await receiveAnswer(data);
+            break;
+        case "offer":
+            await createAnswer(data);
+            break;
+        case  "ice_candidate":
+            await setIceCandidate(JSON.parse(data.sdp));
+            break;
+    };
 });
 
 function wireInputsToChannel(channel) {
@@ -76,8 +91,8 @@ function wireInputsToChannel(channel) {
     });
 }
 
-async function sendOffer() {
-    connection = initRTCConnection(connection);
+async function sendOffer(data) {
+    connection = initRTCConnection(data.sdp);
 
     const channel = connection.createDataChannel("chat");
     channel.addEventListener("open", (event) => {
@@ -98,7 +113,7 @@ async function receiveAnswer(answer) {
 }
 
 async function createAnswer(offer) {
-    connection = initRTCConnection(connection);
+    //connection = initRTCConnection();
     console.log("setting offer " + JSON.stringify(offer));
     await connection.setRemoteDescription(offer);
     console.log("remote description is " + connection.remoteDescription);

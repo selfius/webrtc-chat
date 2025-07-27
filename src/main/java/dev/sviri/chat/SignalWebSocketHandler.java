@@ -1,6 +1,5 @@
 package dev.sviri.chat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,17 +18,13 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(SignalWebSocketHandler.class);
 
     private final ObjectMapper objectMapper;
-    private final String BEGIN_SYNC_MESSAGE;
     private final RoomService roomService;
+    private final TURNPasswordGeneratorService turnPasswordGeneratorService;
 
-    SignalWebSocketHandler(ObjectMapper objectMapper, RoomService roomService) {
+    SignalWebSocketHandler(ObjectMapper objectMapper, RoomService roomService, TURNPasswordGeneratorService turnPasswordGeneratorService) {
         this.objectMapper = objectMapper;
         this.roomService = roomService;
-        try {
-            BEGIN_SYNC_MESSAGE = objectMapper.writeValueAsString(new SignalMessage(SignalMessageType.START_SYNC, null));
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
+        this.turnPasswordGeneratorService = turnPasswordGeneratorService;
     }
 
     record SessionPair(WebSocketSession initiator, WebSocketSession follower) {
@@ -93,8 +88,17 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
 
     private void beginRTCNegotiationIfNeeded(WebSocketSession session) throws IOException {
         WebSocketSession initiator = getInitiator(session);
-        if (initiator != null && getFollower(session) != null) {
-            initiator.sendMessage(new TextMessage(BEGIN_SYNC_MESSAGE));
+        WebSocketSession follower = getFollower(session);
+        if (initiator != null && follower != null) {
+            String beginSyncMessage = objectMapper.writeValueAsString(new SignalMessage(SignalMessageType.START_SYNC,
+                    turnPasswordGeneratorService.generatePassword()
+            ));
+            initiator.sendMessage(new TextMessage(beginSyncMessage));
+
+            String stunCred = objectMapper.writeValueAsString(new SignalMessage(SignalMessageType.STUN_CREDENTIALS,
+                    turnPasswordGeneratorService.generatePassword()
+            ));
+            follower.sendMessage(new TextMessage(stunCred));
         }
     }
 }
