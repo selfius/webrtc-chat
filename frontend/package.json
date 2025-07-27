@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "packageManager": "npm@11.4.2",
+  "scripts": {
+    "build": "echo Building frontend && webpack",
+    "check": "echo Checking frontend && npm run lint && npm run test",
+    "lint": "echo Linting frontend",
+    "test": "echo Testing frontend"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.6.3",
+    "webpack": "^5.4.0",
+    "webpack-cli": "^4.2.0"
+  }
+}

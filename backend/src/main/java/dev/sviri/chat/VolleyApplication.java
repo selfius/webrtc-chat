@@ -19,6 +19,7 @@ public class VolleyApplication {
         public void addResourceHandlers(ResourceHandlerRegistry registry) {
             registry.addResourceHandler("/static/**")
                     .addResourceLocations("file:src/main/resources/static/")
+                    .addResourceLocations("file:../frontend/build/www/")
                     .addResourceLocations("classpath:/static/");
         }
     }

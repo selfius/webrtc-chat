@@ -1,6 +1,40 @@
 import {add_incoming_message, add_outgoing_message} from './messages.js';
 
 let connection = undefined;
+const signalChannel = new WebSocket('/signal');
+
+signalChannel.addEventListener("open", async (event) => {
+    const uidCookie = await cookieStore.get("uid");
+    const uid = uidCookie.value;
+    const roomId = document.URL.match("room/([\\w-]*)$")[1];
+
+    signalChannel.send(JSON.stringify({
+        type: "initiate",
+        sdp: `${uid},${roomId}`
+    }));
+});
+
+signalChannel.addEventListener("message", async (event) => {
+    console.log(" >> " + event.data);
+    let data = JSON.parse(event.data);
+    switch(data.type) {
+        case "start_sync" :
+            await sendOffer(data);
+            break;
+        case "stun_credentials" :
+            connection = initRTCConnection(data.sdp);
+            break;
+        case "answer":
+            await receiveAnswer(data);
+            break;
+        case "offer":
+            await createAnswer(data);
+            break;
+        case  "ice_candidate":
+            await setIceCandidate(JSON.parse(data.sdp));
+            break;
+    };
+});
 
 function initRTCConnection(credentials) {
     let connection = undefined;
@@ -34,45 +68,9 @@ function initRTCConnection(credentials) {
     return connection;
 }
 
-
-const signalChannel = new WebSocket('/signal');
-signalChannel.addEventListener("open", async (event) => {
-    const uidCookie = await cookieStore.get("uid");
-    const uid = uidCookie.value;
-    const roomId = document.URL.match("room/([\\w-]*)$")[1];
-
-    signalChannel.send(JSON.stringify({
-        type: "initiate",
-        sdp: `${uid},${roomId}`
-    }));
-});
-
-signalChannel.addEventListener("message", async (event) => {
-    console.log(" >> " + event.data);
-    let data = JSON.parse(event.data);
-    switch(data.type) {
-        case "start_sync" : 
-            await sendOffer(data);
-            break;
-        case "stun_credentials" :
-            connection = initRTCConnection(data.sdp);
-            break;
-        case "answer": 
-            await receiveAnswer(data);
-            break;
-        case "offer":
-            await createAnswer(data);
-            break;
-        case  "ice_candidate":
-            await setIceCandidate(JSON.parse(data.sdp));
-            break;
-    };
-});
-
 function wireInputsToChannel(channel) {
     const messageInput = document.getElementById("message_input");
-
-    messageInput.onkeydown = 
+    messageInput.onkeydown =
         (event) => {
             if (event.key == "Enter" && messageInput.value.trim()) {
                 try{
@@ -113,7 +111,6 @@ async function receiveAnswer(answer) {
 }
 
 async function createAnswer(offer) {
-    //connection = initRTCConnection();
     console.log("setting offer " + JSON.stringify(offer));
     await connection.setRemoteDescription(offer);
     console.log("remote description is " + connection.remoteDescription);
