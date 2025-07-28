@@ -5,33 +5,45 @@
                 color: lightgrey
             }
 
-            div.message {
-                margin: 8px;
-                padding: 4px;
-                border-radius: 4px;
+            .message-container {
+                display: flex;
+                margin: 4px;
             }
 
-            div.incoming-message {
+            .message-container.outgoing {
+                flex-direction: row-reverse;
+            }
+
+            .message {
+                padding: 4px;
+                border-radius: 4px;
+                max-width: 60%;
+                word-wrap: break-word;
+            }
+
+            .incoming > .message {
                 background: green;
             }
 
-            div.outgoing-message {
+            .outgoing > .message {
                 background: darkgreen;
             }
         </style>
     </head>
     <body>
         <div style="background: grey; display: inline-block">
-            <div id="message-log" style="width: 400px; height: 300px; overflow: scroll">
+            <div id="message-log" style="width: 400px; height: 300px; overflow: auto" class="message-log">
             </div>
             <input id="message_input" type="text" style="width: 100%"></input>
         </div>
         <div style="display:none">
-            <div id="incoming-message-template" class="message incoming-message">
-                %message%
+            <div id="incoming-message-template" class="message-container incoming">
+                    <span class="message">
+                    </span>
             </div>
-            <div id="outgoing-message-template" class="message outgoing-message">
-                %message%
+            <div id="outgoing-message-template" class="message-container outgoing">
+                    <span class="message">
+                    </span>
             </div>
         </div>
     </body>

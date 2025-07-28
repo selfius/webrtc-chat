@@ -8,12 +8,13 @@ export function add_outgoing_message(text) {
 }
 
 function add_message(template_id, text) {
-    let newMessage = document.getElementById(template_id).cloneNode(/*deep= */true);
-    newMessage.id = undefined;
+    let newMessageContainer = document.getElementById(template_id).cloneNode(/*deep= */true);
+    newMessageContainer.removeAttribute("id");
 
-    newMessage.textContent = newMessage.textContent.replace("%message%", text);
+    const newMessage = newMessageContainer.querySelector('.message');
+    newMessage.textContent = text;
 
-    document.getElementById("message-log").appendChild(newMessage);
-    newMessage.scrollIntoView();
+    document.getElementById("message-log").appendChild(newMessageContainer);
+    newMessageContainer.scrollIntoView();
 }
 
