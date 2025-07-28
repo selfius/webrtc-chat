@@ -1,0 +1,26 @@
+body {
+    color: lightgrey
+}
+
+.message-container {
+    display: flex;
+    margin: 4px;
+    &.outgoing {
+      flex-direction: row-reverse;
+    }
+}
+
+.message {
+    padding: 4px;
+    border-radius: 4px;
+    max-width: 60%;
+    word-wrap: break-word;
+}
+
+.incoming > .message {
+    background: green;
+}
+
+.outgoing > .message {
+    background: darkgreen;
+}
