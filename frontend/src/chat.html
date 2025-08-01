@@ -2,19 +2,24 @@
     <head>
     </head>
     <body>
-        <div style="background: grey; display: inline-block">
-            <div id="message-log" style="width: 400px; height: 300px; overflow: auto" class="message-log">
+        <div id="content">
+            <div>
+                <div id="message-log" style="overflow: auto" class="message-log">
+                </div>
+                <div class="message-input">
+                    <input id="message_input" type="text" placeholder="Type youre message here">
+                    </input>
+                </div>
             </div>
-            <input id="message_input" type="text" style="width: 100%"></input>
-        </div>
-        <div style="display:none">
-            <div id="incoming-message-template" class="message-container incoming">
-                <span class="message">
-                </span>
-            </div>
-            <div id="outgoing-message-template" class="message-container outgoing">
-                <span class="message">
-                </span>
+            <div style="display:none">
+                <div id="incoming-message-template" class="message-container incoming">
+                    <span class="message">
+                    </span>
+                </div>
+                <div id="outgoing-message-template" class="message-container outgoing">
+                    <span class="message">
+                    </span>
+                </div>
             </div>
         </div>
     </body>

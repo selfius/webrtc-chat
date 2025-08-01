@@ -1,26 +1,62 @@
-body {
-    color: lightgrey
+body input {
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+}
+
+#content {
+  color: lightgrey;
+  height: 100%;
+  display: grid;
+  grid-template-areas: ".   .  ."
+                       ". chat ."
+                       ".   .  .";
+  grid-template-rows: 20px 1fr 20px;
+  grid-template-columns: minmax(auto, 100px) minmax(600px, 1fr) minmax(auto, 100px);
+}
+
+
+#content > div:first-child {
+  grid-area: chat;
+  background: grey;
+  display: grid;
+  grid-template-rows: 1fr 40px;
+}
+
+div.message-input {
+  margin: 4px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #262424;
+}
+
+input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: lightgrey;
+  width: 100%;
+  height: 100%;
 }
 
 .message-container {
-    display: flex;
-    margin: 4px;
-    &.outgoing {
-      flex-direction: row-reverse;
-    }
-}
+  display: flex;
+  margin: 4px;
+  &.outgoing {
+    flex-direction: row-reverse;
+  }
 
-.message {
-    padding: 4px;
+  .message {
+    padding: 8px;
     border-radius: 4px;
     max-width: 60%;
     word-wrap: break-word;
+  }
 }
 
 .incoming > .message {
-    background: green;
+  background: green;
 }
 
 .outgoing > .message {
-    background: darkgreen;
+  background: darkgreen;
 }
