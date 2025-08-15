@@ -20,6 +20,4 @@ public class WebSocketConfiguration implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(signalWebSocketHandler, "signal").setAllowedOrigins("https://chat.sviri.dev");
     }
-
-
 }

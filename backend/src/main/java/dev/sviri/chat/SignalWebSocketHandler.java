@@ -58,6 +58,7 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
             case INITIATE -> {
                 var uidAndRoomId = signal.sdp().split(",");
                 Room room = roomService.findRoom(UUID.fromString(uidAndRoomId[1]));
+                User user = new User(UUID.fromString(uidAndRoomId[0]));
                 if (room.initiator().uid().toString().equals(uidAndRoomId[0])) {
                     sessionsByRoom.compute(room.uuid(),
                             (unused, value) -> value == null ?
@@ -66,6 +67,9 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
                 } else {
                     sessionsByRoom.computeIfPresent(room.uuid(),
                             (unused, value) -> value.withFollower(session));
+                    room.setFollower(user);
+                    roomService.updateRoom(room);
+
                     if (!sessionsByRoom.containsKey(room.uuid())) {
                         throw new IllegalStateException("Couldn't insert follower into an empty room");
                     }

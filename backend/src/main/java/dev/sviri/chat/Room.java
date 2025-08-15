@@ -4,15 +4,21 @@ import java.util.UUID;
 
 public class Room {
     private final User initiator;
+
     private final UUID uuid;
+
+    private User follower;
 
     Room(User initiator) {
         this.initiator = initiator;
         this.uuid = UUID.randomUUID();
     }
 
-    User follower;
-
+    Room(UUID roomId, UUID initiatorId, UUID followerId) {
+        this.uuid = roomId;
+        this.initiator = new User(initiatorId);
+        this.follower = new User(followerId);
+    }
 
     public Room setFollower(User follower) {
         this.follower = follower;

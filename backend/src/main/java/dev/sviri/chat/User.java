@@ -9,6 +9,10 @@ public class User {
         this.uid = UUID.randomUUID();
     }
 
+    User(UUID uid) {
+        this.uid = uid;
+    }
+
     public UUID uid() {
         return uid;
     }
