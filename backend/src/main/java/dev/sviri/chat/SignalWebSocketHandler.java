@@ -9,9 +9,6 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 class SignalWebSocketHandler extends TextWebSocketHandler {
@@ -19,90 +16,55 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
     private final RoomService roomService;
+    private final UserService userService;
     private final TURNPasswordGeneratorService turnPasswordGeneratorService;
 
-    SignalWebSocketHandler(ObjectMapper objectMapper, RoomService roomService, TURNPasswordGeneratorService turnPasswordGeneratorService) {
+    SignalWebSocketHandler(ObjectMapper objectMapper, RoomService roomService, UserService userService,
+                           TURNPasswordGeneratorService turnPasswordGeneratorService) {
         this.objectMapper = objectMapper;
         this.roomService = roomService;
+        this.userService = userService;
         this.turnPasswordGeneratorService = turnPasswordGeneratorService;
     }
-
-    record SessionPair(WebSocketSession initiator, WebSocketSession follower) {
-        SessionPair withInitiator(WebSocketSession initiator) {
-            return new SessionPair(initiator, this.follower);
-        }
-
-        SessionPair withFollower(WebSocketSession follower) {
-            return new SessionPair(this.initiator, follower);
-        }
-    }
-
-    Map<UUID, SessionPair> sessionsByRoom = new ConcurrentHashMap<>();
-    Map<String, UUID> roomsUidsBySessionIds = new ConcurrentHashMap<>();
-
-    private WebSocketSession getFollower(WebSocketSession session) {
-        SessionPair sessionPair = sessionsByRoom.get(roomsUidsBySessionIds.get(session.getId()));
-        return sessionPair.follower();
-    }
-
-    private WebSocketSession getInitiator(WebSocketSession session) {
-        SessionPair sessionPair = sessionsByRoom.get(roomsUidsBySessionIds.get(session.getId()));
-        return sessionPair.initiator();
-    }
-
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         var signal = objectMapper.readValue(message.getPayload(), SignalMessage.class);
+        Room room = roomService.findRoom(signal.roomId());
+        User user = new User(signal.senderUserId());
         switch (signal.type()) {
             case INITIATE -> {
-                var uidAndRoomId = signal.sdp().split(",");
-                Room room = roomService.findRoom(UUID.fromString(uidAndRoomId[1]));
-                User user = new User(UUID.fromString(uidAndRoomId[0]));
-                if (room.initiator().uid().toString().equals(uidAndRoomId[0])) {
-                    sessionsByRoom.compute(room.uuid(),
-                            (unused, value) -> value == null ?
-                                    new SessionPair(session, null) : value.withInitiator(session)
-                    );
-                } else {
-                    sessionsByRoom.computeIfPresent(room.uuid(),
-                            (unused, value) -> value.withFollower(session));
+                if (!room.initiator().uid().equals(signal.senderUserId())) {
                     room.setFollower(user);
                     roomService.updateRoom(room);
-
-                    if (!sessionsByRoom.containsKey(room.uuid())) {
-                        throw new IllegalStateException("Couldn't insert follower into an empty room");
-                    }
                 }
-                roomsUidsBySessionIds.put(session.getId(), room.uuid());
-                beginRTCNegotiationIfNeeded(session);
+                userService.bindUser(user, session);
+                beginRTCNegotiationIfNeeded(room);
             }
-            case OFFER -> getFollower(session).sendMessage(message);
-            case ANSWER -> getInitiator(session).sendMessage(message);
+            case OFFER -> userService.messageUser(room.follower(), message.asBytes());
+            case ANSWER -> userService.messageUser(room.initiator(), message.asBytes());
             case ICE_CANDIDATE -> {
-                if (session.equals(getInitiator(session))) {
-                    getFollower(session).sendMessage(message);
+                if (user.uid().equals(room.initiator().uid())) {
+                    userService.messageUser(room.follower(), message.asBytes());
                 } else {
-                    getInitiator(session).sendMessage(message);
+                    userService.messageUser(room.initiator(), message.asBytes());
                 }
             }
         }
     }
 
-
-    private void beginRTCNegotiationIfNeeded(WebSocketSession session) throws IOException {
-        WebSocketSession initiator = getInitiator(session);
-        WebSocketSession follower = getFollower(session);
-        if (initiator != null && follower != null) {
-            String beginSyncMessage = objectMapper.writeValueAsString(new SignalMessage(SignalMessageType.START_SYNC,
-                    turnPasswordGeneratorService.generatePassword()
-            ));
-            initiator.sendMessage(new TextMessage(beginSyncMessage));
-
-            String stunCred = objectMapper.writeValueAsString(new SignalMessage(SignalMessageType.STUN_CREDENTIALS,
-                    turnPasswordGeneratorService.generatePassword()
-            ));
-            follower.sendMessage(new TextMessage(stunCred));
+    private void beginRTCNegotiationIfNeeded(Room room) throws IOException {
+        if (room.follower() == null) {
+            return;
         }
+        var beginSyncMessage = objectMapper.writeValueAsBytes(new SignalMessage(SignalMessageType.START_SYNC,
+                turnPasswordGeneratorService.generatePassword()
+        ));
+        userService.messageUser(room.initiator(), beginSyncMessage);
+
+        var stunCred = objectMapper.writeValueAsBytes(new SignalMessage(SignalMessageType.STUN_CREDENTIALS,
+                turnPasswordGeneratorService.generatePassword()
+        ));
+        userService.messageUser(room.follower(), stunCred);
     }
 }

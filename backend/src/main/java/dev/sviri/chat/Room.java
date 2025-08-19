@@ -1,5 +1,7 @@
 package dev.sviri.chat;
 
+import org.springframework.lang.Nullable;
+
 import java.util.UUID;
 
 public class Room {
@@ -14,10 +16,10 @@ public class Room {
         this.uuid = UUID.randomUUID();
     }
 
-    Room(UUID roomId, UUID initiatorId, UUID followerId) {
+    Room(UUID roomId, UUID initiatorId, @Nullable UUID followerId) {
         this.uuid = roomId;
         this.initiator = new User(initiatorId);
-        this.follower = new User(followerId);
+        this.follower = followerId == null ?  null : new User(followerId);
     }
 
     public Room setFollower(User follower) {

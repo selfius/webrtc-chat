@@ -3,15 +3,18 @@ import {add_incoming_message, add_outgoing_message} from './messages.js';
 let connection = undefined;
 const signalChannel = new WebSocket('/signal');
 
-signalChannel.addEventListener("open", async (event) => {
-    const uidCookie = await cookieStore.get("uid");
-    const uid = uidCookie.value;
-    const roomId = document.URL.match("room/([\\w-]*)$")[1];
+const roomId = document.URL.match("room/([\\w-]*)$")[1];
+const uidCookie = await cookieStore.get("uid");
+const userId = uidCookie.value;
 
-    signalChannel.send(JSON.stringify({
+signalChannel.addEventListener("open", async (event) => {
+    const request = JSON.stringify({
         type: "initiate",
-        sdp: `${uid},${roomId}`
-    }));
+        senderUserId: userId,
+        roomId: roomId
+    });
+
+    signalChannel.send(request);
 });
 
 signalChannel.addEventListener("message", async (event) => {
@@ -58,7 +61,9 @@ function initRTCConnection(credentials) {
         console.log("sending ice cadidate");
         await signalChannel.send(JSON.stringify({
             type: "ice_candidate",
-            sdp: JSON.stringify(event.candidate)
+            sdp: JSON.stringify(event.candidate),
+            senderUserId: userId,
+            roomId: roomId
         }));
     });
 
@@ -99,6 +104,8 @@ async function sendOffer(data) {
     });
 
     const offer = await connection.createOffer();
+    offer.senderUserId = userId;
+    offer.roomId = roomId;
     await connection.setLocalDescription(offer);
     await signalChannel.send(JSON.stringify(offer));
     console.log("offer sent");
@@ -115,6 +122,8 @@ async function createAnswer(offer) {
     await connection.setRemoteDescription(offer);
     console.log("remote description is " + connection.remoteDescription);
     const answer = await connection.createAnswer();
+    answer.senderUserId = userId;
+    answer.roomId = roomId;
     await connection.setLocalDescription(answer);
     await signalChannel.send(JSON.stringify(answer));
     console.log("answer sent");

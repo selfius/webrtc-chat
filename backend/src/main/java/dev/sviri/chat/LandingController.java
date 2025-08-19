@@ -50,19 +50,17 @@ public class LandingController {
     }
 
     private User getUserAndDropCookie(String uid, HttpServletResponse httpServletResponse) {
-        User initiator = null;
+        UUID userId = null;
         if (uid != null) {
-            UUID userId = null;
             try {
                 userId = UUID.fromString(uid);
             } catch (Exception e) {
                 log.warn(String.format("'%s' is not a valid user UUID", uid));
             }
-            initiator = userService.findUser(userId);
+        } else {
+            userId = UUID.randomUUID();
         }
-        if (initiator == null) {
-            initiator = userService.createUser();
-        }
+        var initiator = new User(userId);
         Cookie userIdCookie = new Cookie(UID_COOKIE, initiator.uid().toString());
         userIdCookie.setPath("/");
         httpServletResponse.addCookie(userIdCookie);
