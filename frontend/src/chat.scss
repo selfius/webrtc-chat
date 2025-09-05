@@ -7,11 +7,11 @@ body input {
   color: lightgrey;
   height: 100%;
   display: grid;
-  grid-template-areas: ".   .  ."
-                       ". chat ."
-                       ".   .  .";
+  grid-template-areas: ".   .   ."
+                       ". chat blob"
+                       ".   .   .";
   grid-template-rows: 20px 1fr 20px;
-  grid-template-columns: minmax(auto, 100px) minmax(600px, 1fr) minmax(auto, 100px);
+  grid-template-columns: minmax(auto, 100px) minmax(600px, 1fr) 200px;
 }
 
 
@@ -20,6 +20,12 @@ body input {
   background: grey;
   display: grid;
   grid-template-rows: 1fr 40px;
+}
+
+#content > div:nth-child(2) {
+  grid-area: blob;
+  display: flex;
+  align-items: center;
 }
 
 div.message-input {

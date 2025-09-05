@@ -1,4 +1,5 @@
 import './webrtc';
+import './blob';
 
 import '@csstools/normalize.css';
 import '@fontsource/roboto';
