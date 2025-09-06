@@ -1,5 +1,9 @@
 package dev.sviri.chat;
 
+import dev.sviri.chat.room.Room;
+import dev.sviri.chat.room.RoomService;
+import dev.sviri.chat.user.User;
+import dev.sviri.chat.user.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;

@@ -1,5 +1,6 @@
-package dev.sviri.chat;
+package dev.sviri.chat.room;
 
+import dev.sviri.chat.user.User;
 import org.springframework.lang.Nullable;
 
 import java.util.UUID;

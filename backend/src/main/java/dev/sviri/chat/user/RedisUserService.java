@@ -1,5 +1,6 @@
-package dev.sviri.chat;
+package dev.sviri.chat.user;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -14,19 +15,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class UserService {
+@Profile("gcp")
+public class RedisUserService implements UserService {
 
     private final RedisConnection redisConnection;
     private final RedisMessageListenerContainer redisMessageListenerContainer;
 
 
-    UserService(LettuceConnectionFactory lettuceConnectionFactory, RedisMessageListenerContainer redisMessageListenerContainer) {
+    RedisUserService(LettuceConnectionFactory lettuceConnectionFactory, RedisMessageListenerContainer redisMessageListenerContainer) {
         this.redisConnection = lettuceConnectionFactory.getConnection();
         this.redisMessageListenerContainer = redisMessageListenerContainer;
     }
 
     private final Map<User, WebSocketSession> sessionByUser = new ConcurrentHashMap<>();
 
+    @Override
     public void bindUser(User user, WebSocketSession webSocketSession) {
         sessionByUser.put(user, webSocketSession);
         redisMessageListenerContainer.addMessageListener((message, unused) -> {
@@ -38,12 +41,10 @@ public class UserService {
         }, Topic.channel(usersInbox(user)));
     }
 
+    @Override
     public void messageUser(User user, byte[] payload) {
         this.redisConnection.publish(usersInbox(user).getBytes(StandardCharsets.UTF_8), payload);
         //TODO short circuit if that user is connected to the same instance
     }
 
-    private String usersInbox(User user) {
-        return String.format("user:%s", user.uid());
-    }
 }

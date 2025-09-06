@@ -1,6 +1,10 @@
 package dev.sviri.chat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.sviri.chat.room.Room;
+import dev.sviri.chat.room.RoomService;
+import dev.sviri.chat.user.User;
+import dev.sviri.chat.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -30,6 +34,7 @@ class SignalWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         var signal = objectMapper.readValue(message.getPayload(), SignalMessage.class);
+        log.info("Received message {}", message);
         Room room = roomService.findRoom(signal.roomId());
         User user = new User(signal.senderUserId());
         switch (signal.type()) {

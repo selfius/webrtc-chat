@@ -1,4 +1,4 @@
-package dev.sviri.chat;
+package dev.sviri.chat.user;
 
 import java.util.UUID;
 
@@ -9,7 +9,7 @@ public class User {
         this.uid = UUID.randomUUID();
     }
 
-    User(UUID uid) {
+    public User(UUID uid) {
         this.uid = uid;
     }
 
