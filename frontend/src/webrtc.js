@@ -6,15 +6,10 @@ const signalChannel = new WebSocket('/signal');
 const roomId = document.URL.match("room/([\\w-]*)$")[1];
 const uidCookie = await cookieStore.get("uid");
 const userId = uidCookie.value;
-
-signalChannel.addEventListener("open", async (event) => {
-    const request = JSON.stringify({
-        type: "initiate",
-        senderUserId: userId,
-        roomId: roomId
-    });
-
-    signalChannel.send(request);
+const init_request = JSON.stringify({
+    type: "initiate",
+    senderUserId: userId,
+    roomId: roomId
 });
 
 signalChannel.addEventListener("message", async (event) => {
@@ -38,6 +33,18 @@ signalChannel.addEventListener("message", async (event) => {
             break;
     };
 });
+
+let sending_init = false;
+
+signalChannel.addEventListener("open", async (event) => {
+    sending_init = true;
+    signalChannel.send(init_request);
+});
+
+if (!sending_init && signalChannel.readyState == /*OPEN*/ 1) {
+    sending_init = true;
+    signalChannel.send(init_request);
+}
 
 function initRTCConnection(credentials) {
     let connection = undefined;
