@@ -1,8 +1,10 @@
 let canvas;
-let data;
+let data = {
+    x: 100,
+    y: 200,
+    radius: 60,
+};
 
-
-//TODO this should be more or less the only thing remaining in this file
 function game_loop(timestamp) {
     if (!canvas) {
         canvas = document.getElementById("blob_canvas");
@@ -24,13 +26,13 @@ function game_loop(timestamp) {
 }
 
 window.addEventListener("load", () => {
+    game_loop();
     if (window.Worker) {
-        const myWorker = new Worker(new URL("web-worker.js", import.meta.url));
+        const myWorker = new Worker(new URL("physics.js", import.meta.url));
         console.log('Worker created');
 
         myWorker.onmessage = (e) => {
             data = e.data;
-            game_loop();
         }
     } else {
         console.log('Workers not supported')
