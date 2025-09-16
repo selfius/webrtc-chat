@@ -1,32 +1,29 @@
 package dev.sviri.chat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.hash.Jackson2HashMapper;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
-import java.util.Date;
-import java.util.Map;
+import java.util.Objects;
 
-@SpringBootTest
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class VolleyApplicationTests {
 
-    @Resource(name = "redisTemplate")
-    RedisTemplate<String, String> redisTemplate;
+    @LocalServerPort
+    private int port;
 
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     @Test
     void contextLoads() {
-        record Nested(String some, String another) {
-        }
-        record Test(Integer field, String smhield, Date date, Nested nested) {
-        }
-
-        Map<String, Object> mapped = new Jackson2HashMapper(new ObjectMapper(), false)
-                .toHash(new Test(42, "indeed", new Date(), new Nested("mep", "bloop")));
-        System.out.println(mapped);
-        redisTemplate.opsForHash().putAll("hash_test", mapped);
+        var response = restTemplate.withRedirects(ClientHttpRequestFactorySettings.Redirects.DONT_FOLLOW).getForEntity("http://localhost:{0}", String.class, port);
+        assertThat(Objects.requireNonNull(response.getHeaders().get("set-cookie")).getFirst()).startsWith("uid=");
+        assertThat(response.getStatusCode().value()).isEqualTo(302);
     }
 }
